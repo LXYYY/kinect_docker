@@ -2,18 +2,17 @@
 
 XAUTH:=/tmp/.docker.xauth
 TF_VERSION:=1.6.0
-ROS_VERSION:=kinetic
-UBUNTU_VERSION:=xenial
+ROS_VERSION:=indigo
+UBUNTU_VERSION:=trusty
 DOCKER_NAME:=voxgraph:$(ROS_VERSION)-tf$(TF_VERSION)
 ROS_PACKAGE:=perception
 
 build:
-	@docker build -t ros-tensorflow:$(ROS_VERSION)-tf$(TF_VERSION) ros_tensorflow_$(ROS_VERSION)_tf$(TF_VERSION)/.
 	@docker build --build-arg myuser=${shell whoami} \
 		--build-arg TF_SET_VERSION=$(TF_VERSION)\
 		--build-arg ROS_SET_VERSION=$(ROS_VERSION)\
 		--build-arg UBUNTU_SET_VERSION=$(UBUNTU_VERSION)\
-		-t $(DOCKER_NAME)-$(ROS_PACKAGE) .
+		-t kinect-indigo-trusty .
 
 run-root: build
 	nvidia-docker run -it --name $(DOCKER_NAME)  --rm \
@@ -32,10 +31,10 @@ run-root: build
 	   $(DOCKER_NAME)
 
 run:
-	make build
+	#make build
 	#touch $(XAUTH)
 	#xauth nlist ${DISPLAY} | sed -e 's/^..../ffff/' | xauth -f $(XAUTH) nmerge - 
-	nvidia-docker run -it --gpus all --name voxgraph  --rm \
+	docker run -it --name kinect  --rm \
 	   --env="DISPLAY=${DISPLAY}" \
 	   --env="QT_X11_NO_MITSHM=1" \
 	   --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
@@ -44,10 +43,11 @@ run:
 	   -e HOME=${HOME} \
 	   -u ${shell whoami} \
 	   -v /etc/localtime:/etc/localtime \
+	   -v ${HOME}/Workspace:${HOME}/Workspace \
 	   --security-opt seccomp=unconfined \
 	   --net=host \
 	   --privileged \
-	   $(DOCKER_NAME)-perception
+	   kinect-indigo-trusty
 
 run-nvidia:
 	make build
