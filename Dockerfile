@@ -44,7 +44,7 @@ RUN make distclean && \
 ARG TF_SET_VERSION
 ARG ROS_SET_VERSION
 ARG UBUNTU_SET_VERSION
-FROM ros-tensorflow:$ROS_SET_VERSION-tf$TF_SET_VERSION
+FROM ros-cuda:indigo-8.0
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 COPY --from=glvnd /usr/local/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu
@@ -113,7 +113,8 @@ RUN apt-get install build-essential cmake pkg-config -y
 RUN apt-get install libturbojpeg libjpeg-turbo8-dev -y
 RUN apt-get install libopenni2-dev -y
 
-RUN cd libfreenect2 && mkdir build && cd build && cmake .. -DENABLE_CXX11=ON && make && make install
+COPY helper_math.h /usr/local/include/
+RUN cd libfreenect2 && mkdir build && cd build && cmake .. -DENABLE_CXX11=ON -DCUDA_PROPAGATE_HOST_FLAGS=off -DCMAKE_BUILD_TYPE=Release && make && make install
 RUN cd libfreenect2 && cp platform/linux/udev/90-kinect2.rules /etc/udev/rules.d/
 
 RUN apt update && apt install ros-${ROS_VERSION}-image-pipeline ros-${ROS_VERSION}-image-transport-plugins ros-${ROS_VERSION}-image-transport ros-${ROS_VERSION}-nodelet-core -y
@@ -123,5 +124,6 @@ RUN apt update && apt install ros-${ROS_VERSION}-image-pipeline ros-${ROS_VERSIO
 #ENV PATH "/usr/lib/ccache:$PATH"
 #RUN ccache --max-size=10G
 
+WORKDIR /home/$USERNAME/Workspace/kinect_ws
 ENTRYPOINT [ "/ros_entrypoint.sh" ]
 CMD [ "bash" ]
